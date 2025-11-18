@@ -25,13 +25,13 @@ agent = DQNAgent(STATE_DIM, ACTION_DIM)
 if os.path.exists(MODEL_PATH):
     try:
         agent.load_model(MODEL_PATH)
-        print(f"✓ Đã load model từ {MODEL_PATH}")
+        print(f"Đã load model từ {MODEL_PATH}")
         print(f"  - Epsilon: {agent.epsilon:.3f}")
         print(f"  - Model đã được train: {agent.is_trained}")
     except Exception as e:
-        print(f"✗ Không thể load model: {e}")
+        print(f"Không thể load model: {e}")
 else:
-    print(f"⚠ Chưa có model. Sẽ bắt đầu từ đầu (cold start)")
+    print(f"Chưa có model. Sẽ bắt đầu từ đầu (cold start)")
 
 # Data model cho /recommend
 class RecommendInput(BaseModel):

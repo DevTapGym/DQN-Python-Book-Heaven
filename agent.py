@@ -19,8 +19,8 @@ class DQNAgent:
         
         # Epsilon strategy
         self.epsilon = 0.5  # Bắt đầu 50-50 sau khi có model
-        self.epsilon_min = 0.1
-        self.epsilon_decay = 0.995
+        self.epsilon_min = 0.3  # Dừng ở 30% exploration để cân bằng khám phá sản phẩm mới
+        self.epsilon_decay = 0.998
         
         # Tracking
         self.is_trained = False  # Chưa có model
