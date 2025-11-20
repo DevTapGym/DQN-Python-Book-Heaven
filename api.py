@@ -2,6 +2,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field, validator
 from typing import List, Optional
 import numpy as np
+import os
+from pathlib import Path
 from agent import DQNAgent
 from state_encoder import encode_state
 from config import MAX_PRODUCTS, CATEGORIES, GENDER_MAP, AGE_MAP, POSITION_MAP
@@ -15,8 +17,21 @@ app = FastAPI()
 # Total: 15 + 69 + 3 = 87
 STATE_DIM = 87
 ACTION_DIM = MAX_PRODUCTS
+MODEL_PATH = "dqn_model.pt"  # File model chính
 
 agent = DQNAgent(STATE_DIM, ACTION_DIM)
+
+# Tự động load model nếu có file tồn tại
+if os.path.exists(MODEL_PATH):
+    try:
+        agent.load_model(MODEL_PATH)
+        print(f"Đã load model từ {MODEL_PATH}")
+        print(f"  - Epsilon: {agent.epsilon:.3f}")
+        print(f"  - Model đã được train: {agent.is_trained}")
+    except Exception as e:
+        print(f"Không thể load model: {e}")
+else:
+    print(f"Chưa có model. Sẽ bắt đầu từ đầu (cold start)")
 
 # Data model cho /recommend
 class RecommendInput(BaseModel):
@@ -153,16 +168,20 @@ def train_step(input: TrainInput):
         if agent.train_count % 100 == 0:
             agent.update_target()
         
-        # Auto save model mỗi 500 trains
-        if agent.train_count % 500 == 0:
-            agent.save_model(f"dqn_checkpoint_{agent.train_count}.pt")
+        # LƯU MODEL SAU MỖI LẦN TRAIN
+        agent.save_model(MODEL_PATH)
+        
+        # Tạo checkpoint backup mỗi 100 lần train
+        if agent.train_count % 100 == 0:
+            agent.save_model(f"checkpoints/dqn_backup_{agent.train_count}.pt")
         
         return {
             "status": "trained",
             "epsilon": float(agent.epsilon),
             "memory_size": len(agent.memory),
             "train_count": int(agent.train_count),
-            "model_activated": bool(agent.is_trained)
+            "model_activated": bool(agent.is_trained),
+            "model_saved": True
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Lỗi training: {str(e)}")
